@@ -1,8 +1,6 @@
 version: '3.8'
 
 services:
- chromium:
-  image: 
-    file: Dockerfile
-  volumes:
-    "~/chromiumos:/chromiumos"
+ main:
+  image: ubuntu:16.04
+ 
