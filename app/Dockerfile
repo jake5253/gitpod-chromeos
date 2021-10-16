@@ -76,3 +76,14 @@ Defaults timestamp_timeout=300
 EOF
 #COPY startup.sh /home/gitpod
 #RUN chmod +x /home/gitpod/startup.sh && echo "bash /home/gitpod/startup.sh" >> /home/gitpod/.bashrc 
+RUN cat << 'EOF' | tee -a /home/gitpod/.bashrc
+CHROMIUM_SRC_DIR=~/chromiumos
+while read -p "Download source code now?  This could take a very long time. [Y/n]: " REPLY; do
+    [[ $REPLY =~ "[y|Y|'']" ]] && {
+        [[ ! -d ${SOURCE_DIR} ]] && { echo 'Creating directories'; mkdir -p ${SOURCE_DIR}; };
+        cd ${SOURCE_DIR};
+        echo "Initializing repo" && repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -c;
+        echo "Syncronizing" && repo sync -j$(nproc) -c -s;
+    }
+    [[ $REPLY =~ "[n|N]" ]] && break;
+EOF
