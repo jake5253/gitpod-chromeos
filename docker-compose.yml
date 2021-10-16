@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
  chromium:
-  image: file: Dockerfile
+  image: 
+    file: Dockerfile
   volumes:
-   "~/chromiumos:/chromiumos"
+    "~/chromiumos:/chromiumos"
