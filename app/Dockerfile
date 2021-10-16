@@ -69,6 +69,10 @@ RUN sudo git lfs install --system
 # install depot_tools
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /home/gitpod/depot_tools
 RUN echo 'export PATH=/home/gitpod/depot_tools:$PATH' >> /home/gitpod/.bashrc
-
-COPY startup.sh /home/gitpod
-RUN chmod +x /home/gitpod/startup.sh && echo "bash /home/gitpod/startup.sh" >> /home/gitpod/.bashrc 
+RUN git config --global user.name "username" && git config --global user.email "email@example.com" && \
+    cat << EOF | sudo tee -a /etc/sudoers
+Defaults !tty_tickets
+Defaults timestamp_timeout=300
+EOF
+#COPY startup.sh /home/gitpod
+#RUN chmod +x /home/gitpod/startup.sh && echo "bash /home/gitpod/startup.sh" >> /home/gitpod/.bashrc 
