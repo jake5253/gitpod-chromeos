@@ -15,7 +15,6 @@ RUN apt update && apt install --yes --no-install-recommends \
         locales \
         man-db \
         nano \
-        ripgrep \
         software-properties-common \
         sudo \
         time \
@@ -30,7 +29,7 @@ RUN apt update && apt install --yes --no-install-recommends \
         curl \
         lvm2 \
         thin-provisioning-tools \
-        python3.9 \
+        python3 \
         python-pkg-resources \
         python-virtualenv \
         python-oauth2client \
