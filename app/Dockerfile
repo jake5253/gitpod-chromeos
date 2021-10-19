@@ -33,6 +33,7 @@ RUN apt update && apt install --yes --no-install-recommends \
         python-pkg-resources \
         python-virtualenv \
         python-oauth2client \
+        gpg-agent \
     && locale-gen en_US.UTF-8
 
 ENV LANG=en_US.UTF-8
