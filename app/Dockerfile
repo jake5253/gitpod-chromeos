@@ -1,12 +1,9 @@
 FROM ubuntu:bionic
 
-COPY install-packages /usr/bin
-
 ### base ###
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN yes | unminimize \
-    && install-packages \
+RUN apt update && apt install --yes --no-install-recommends \
         zip \
         unzip \
         bash-completion \
@@ -36,14 +33,14 @@ RUN yes | unminimize \
         python3.9 \
         python-pkg-resources \
         python-virtualenv \
-        python-oauth2client
+        python-oauth2client \
     && locale-gen en_US.UTF-8
 
 ENV LANG=en_US.UTF-8
 
 ### Git ###
 RUN add-apt-repository -y ppa:git-core/ppa \
-    && install-packages git git-lfs
+    && apt install --yes git git-lfs
 
 ### Gitpod user ###
 # '-l': see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
@@ -69,21 +66,23 @@ RUN sudo git lfs install --system
 # install depot_tools
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /home/gitpod/depot_tools
 RUN echo 'export PATH=/home/gitpod/depot_tools:$PATH' >> /home/gitpod/.bashrc
-RUN git config --global user.name "username" && git config --global user.email "email@example.com" && \
-    cat << EOF | sudo tee -a /etc/sudoers
-Defaults !tty_tickets
-Defaults timestamp_timeout=300
+RUN git config --global user.name "username" && \
+    git config --global user.email "email@example.com" && \
+    cat << EOF | sudo tee -a /etc/sudoers \
+Defaults !tty_tickets \
+Defaults timestamp_timeout=300 \
 EOF
 #COPY startup.sh /home/gitpod
 #RUN chmod +x /home/gitpod/startup.sh && echo "bash /home/gitpod/startup.sh" >> /home/gitpod/.bashrc 
-RUN cat << 'EOF' | tee -a /home/gitpod/.bashrc
-CHROMIUM_SRC_DIR=~/chromiumos
-while read -p "Download source code now?  This could take a very long time. [Y/n]: " REPLY; do
-    [[ $REPLY =~ "[y|Y|'']" ]] && {
-        [[ ! -d ${SOURCE_DIR} ]] && { echo 'Creating directories'; mkdir -p ${SOURCE_DIR}; };
-        cd ${SOURCE_DIR};
-        echo "Initializing repo" && repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -c;
-        echo "Syncronizing" && repo sync -j$(nproc) -c -s;
-    }
+#RUN cat << 'EOF' | tee -a /home/gitpod/.bashrc
+ENV CHROMIUM_SRC_DIR=~/chromiumos
+RUN while read -p "Download source code now?  This could take a very long time. [Y/n]: " REPLY; do \
+    [[ $REPLY =~ "[y|Y|'']" ]] && { \
+        [[ ! -d ${CHROMIUM_SRC_DIR} ]] && { echo 'Creating directories'; mkdir -p ${CHROMIUM_SRC_DIR}; }; && \ 
+        cd ${CHROMIUM_SRC_DIR}; && \
+        echo "Initializing repo" && \
+           repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -c; && \
+        echo "Syncronizing" && \
+           repo sync -j$(nproc) -c -s; \
+    } \
     [[ $REPLY =~ "[n|N]" ]] && break;
-EOF
