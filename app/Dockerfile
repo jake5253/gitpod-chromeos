@@ -82,4 +82,4 @@ RUN echo 'Creating directories' && \
     echo "Initializing repo" && \
         repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -c && \
     echo "Syncronizing" && \
-        repo sync -j$(nproc) -c -s
+        repo sync -j$(nproc) -c
