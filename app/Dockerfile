@@ -74,14 +74,11 @@ EOF
 #COPY startup.sh /home/gitpod
 #RUN chmod +x /home/gitpod/startup.sh && echo "bash /home/gitpod/startup.sh" >> /home/gitpod/.bashrc 
 #RUN cat << 'EOF' | tee -a /home/gitpod/.bashrc
-ENV CHROMIUM_SRC_DIR=~/chromiumos
-RUN while read -p "Download source code now?  This could take a very long time. [Y/n]: " REPLY; do \
-    [[ $REPLY =~ "[y|Y|'']" ]] && { \
-        [[ ! -d ${CHROMIUM_SRC_DIR} ]] && { echo 'Creating directories'; mkdir -p ${CHROMIUM_SRC_DIR}; }; && \ 
-        cd ${CHROMIUM_SRC_DIR}; && \
-        echo "Initializing repo" && \
-           repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -c; && \
-        echo "Syncronizing" && \
-           repo sync -j$(nproc) -c -s; \
-    } \
-    [[ $REPLY =~ "[n|N]" ]] && break;
+ENV CHROMIUM_SRC_DIR=/home/gitpod/chromiumos
+RUN echo 'Creating directories' && \
+    mkdir -p ${CHROMIUM_SRC_DIR} && \ 
+    cd ${CHROMIUM_SRC_DIR} && \
+    echo "Initializing repo" && \
+        repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -c; && \
+    echo "Syncronizing" && \
+        repo sync -j$(nproc) -c -s;
