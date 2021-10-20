@@ -13,7 +13,7 @@ RUN apt update && apt install --yes --no-install-recommends \
     python3-virtualenv \
     python3-oauth2client\
     gpg-agent \
-    build-essential
+    build-essential \
     && locale-gen en_US.UTF-8
 
 ENV LANG=en_US.UTF-8
