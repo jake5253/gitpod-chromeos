@@ -4,36 +4,16 @@ FROM ubuntu:bionic
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && apt install --yes --no-install-recommends \
-        zip \
-        unzip \
-        bash-completion \
-        build-essential \
-        ninja-build \
-        htop \
-        jq \
-        less \
-        locales \
-        man-db \
-        nano \
-        software-properties-common \
-        sudo \
-        time \
-        emacs-nox \
-        vim \
-        multitail \
-        lsof \
-        ssl-cert \
-        fish \
-        zsh \
-        subversion \
-        curl \
-        lvm2 \
-        thin-provisioning-tools \
-        python3 \
-        python-pkg-resources \
-        python-virtualenv \
-        python-oauth2client \
-        gpg-agent \
+    git \
+    gitk \
+    git-gui \
+    curl \
+    xz-utils \
+    python3-pkg-resources \
+    python3-virtualenv \
+    python3-oauth2client\
+    gpg-agent \
+    build-essential
     && locale-gen en_US.UTF-8
 
 ENV LANG=en_US.UTF-8
@@ -63,23 +43,27 @@ RUN sudo echo "Running 'sudo' for Gitpod: success" && \
 # configure git-lfs
 RUN sudo git lfs install --system
 
+# install pyenv
+RUN unset PYENV_ROOT && \
+    curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+ENV PATH="${HOME}/.pyenv/bin:${PATH}"
+RUN pyenv install 3.9.7 && \
+    pyenv global 3.9.7
+
 # install depot_tools
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /home/gitpod/depot_tools
 ENV PATH=/home/gitpod/depot_tools:${PATH}
 RUN git config --global user.name "username" && \
     git config --global user.email "email@example.com" && \
-    cat << EOF | sudo tee -a /etc/sudoers \
-Defaults !tty_tickets \
-Defaults timestamp_timeout=300 \
-EOF
-#COPY startup.sh /home/gitpod
-#RUN chmod +x /home/gitpod/startup.sh && echo "bash /home/gitpod/startup.sh" >> /home/gitpod/.bashrc 
-#RUN cat << 'EOF' | tee -a /home/gitpod/.bashrc
+    echo -e "Defaults !tty_tickets\n" | sudo tee -a /etc/sudoers && \
+    echo -e "Defaults timestamp_timeout=300\n" | sudo tee -a /etc/sudoers && \
+    echo -e"\numask 022\n" >> /home/gitpod/.bashrc
+
 ENV CHROMIUM_SRC_DIR=/home/gitpod/chromiumos
 RUN echo 'Creating directories' && \
     mkdir -p ${CHROMIUM_SRC_DIR} && \ 
     cd ${CHROMIUM_SRC_DIR} && \
     echo "Initializing repo" && \
-        repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -c -g minilayout && \
+        repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -b stable -g minilayout && \
     echo "Syncronizing" && \
-        repo sync -j$(nproc) -c
+        repo sync -j$(nproc)
