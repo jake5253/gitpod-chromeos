@@ -14,8 +14,14 @@ RUN apt update && apt install --yes --no-install-recommends \
     python3-oauth2client\
     gpg-agent \
     build-essential \
+    locales \
+    software-properties-common \
+    sudo \
+    curl \
+    openssh-client \
+    lvm2 \
+    thin-provisioning-tools \
     && locale-gen en_US.UTF-8
-
 ENV LANG=en_US.UTF-8
 
 ### Git ###
@@ -30,36 +36,40 @@ RUN useradd -l -u 33333 -G sudo -md /home/gitpod -s /bin/bash -p gitpod gitpod \
 ENV HOME=/home/gitpod
 WORKDIR $HOME
 # custom Bash prompt
-RUN { echo && echo "PS1='\[\033[01;32m\]\u\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\]\$(__git_ps1 \" (%s)\") $ '" ; } >> .bashrc
+#RUN { echo && echo "PS1='\[\033[01;32m\]\u\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\]\$(__git_ps1 \" (%s)\") $ '" ; } >> .bashrc
+
+# make sudo more permissive
+RUN cat << EOF | tee -a /etc/sudoers \
+Defaults !tty_tickets \
+Defaults timestamp_timeout=300 \
+EOF
 
 ### Gitpod user (2) ###
 USER gitpod
 # use sudo so that user does not get sudo usage info on (the first) login
 RUN sudo echo "Running 'sudo' for Gitpod: success" && \
     # create .bashrc.d folder and source it in the bashrc
-    mkdir -p /home/gitpod/.bashrc.d && \
+    mkdir -p ${HOME}/.bashrc.d && \
     (echo; echo "for i in \$(ls -A \$HOME/.bashrc.d/); do source \$HOME/.bashrc.d/\$i; done"; echo) >> /home/gitpod/.bashrc
 
 # configure git-lfs
 RUN sudo git lfs install --system
 
 # install pyenv
-RUN unset PYENV_ROOT && \
-    curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-ENV PATH="${HOME}/.pyenv/bin:${PATH}"
-RUN pyenv install 3.9.7 && \
-    pyenv global 3.9.7
+#RUN unset PYENV_ROOT && \
+#    curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+#ENV PATH="${HOME}/.pyenv/bin:${PATH}"
+#RUN pyenv install 3.9.7 && \
+#    pyenv global 3.9.7
 
 # install depot_tools
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /home/gitpod/depot_tools
-ENV PATH=/home/gitpod/depot_tools:${PATH}
+ENV PATH=${HOME}/depot_tools:${PATH}
 RUN git config --global user.name "username" && \
     git config --global user.email "email@example.com" && \
-    echo -e "Defaults !tty_tickets\n" | sudo tee -a /etc/sudoers && \
-    echo -e "Defaults timestamp_timeout=300\n" | sudo tee -a /etc/sudoers && \
-    echo -e"\numask 022\n" >> /home/gitpod/.bashrc
+    echo "\numask 022" | tee -a ${HOME}/.bashrc
 
-ENV CHROMIUM_SRC_DIR=/home/gitpod/chromiumos
+ENV CHROMIUM_SRC_DIR=${HOME}/chromiumos
 RUN echo 'Creating directories' && \
     mkdir -p ${CHROMIUM_SRC_DIR} && \ 
     cd ${CHROMIUM_SRC_DIR} && \
@@ -67,3 +77,5 @@ RUN echo 'Creating directories' && \
         repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -b stable -g minilayout && \
     echo "Syncronizing" && \
         repo sync -j$(nproc)
+        
+ENTRYPOINT [ "/bin/bash" ]
