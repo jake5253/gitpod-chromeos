@@ -1,22 +1,12 @@
-tasks:
-  - init: |
-      docker-compose build
-  - command: |
-      docker-compose up
-      docker run -it gitpodchromeos --
-
+image:
+  file: Dockerfile
+checkoutLocation: chromium/src/
 ports:
-  - port: 5000
-    onOpen: ignore
-  - port: 5601
-    onOpen: open-browser
-  - port: 9200
-    onOpen: open-preview
-  - port: 9300
-    onOpen: ignore
-  - port: 9600
-    onOpen: ignore
-
-vscode:
-  extensions:
-    - ms-azuretools.vscode-docker
+- port: 6080
+tasks:
+- init: >
+    cd /workspace/chromium &&
+    pyenv local system &&
+    bash -c '[[ ! -d src ]] && repo init -u https://chromium.googlesource.com/chromiumos/manifest.git --submodules --depth=1 -b stable -g minilayout' && 
+    repo sync -j$(nproc)
+    cros_sdk
